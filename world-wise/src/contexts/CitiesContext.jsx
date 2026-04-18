@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-const BASE_URL = 'http://localhost:9000/cities';
+const BASE_URL = 'http://localhost:9000';
 
 const CitiesContext = createContext(); // create/initialize a context which returns a context object and is like an identifier
 
@@ -9,13 +9,14 @@ function CitiesProvider({ children }) {
   // Managing state
   const [cities, setCities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentCity, setCurrentCity] = useState({});
 
   // Handling logic (effects,updates etc)
   useEffect(function () {
     async function fetchCities() {
       try {
         setIsLoading(true);
-        const res = await fetch(`${BASE_URL}`);
+        const res = await fetch(`${BASE_URL}/cities`);
         const data = await res.json();
         setCities(data);
         return data;
@@ -30,12 +31,29 @@ function CitiesProvider({ children }) {
     fetchCities();
   }, []);
 
+  async function getCity(id) {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`${BASE_URL}/cities/${id}`);
+      const data = await res.json();
+      setCurrentCity(data);
+      return data;
+    } catch (err) {
+      console.log('error:', err);
+      alert('There was an error loading data...');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   // Provide value to all the components inside the provider using Context.Provider
   return (
     <CitiesContext.Provider
       value={{
         cities,
         isLoading,
+        currentCity,
+        getCity,
       }}
     >
       {children}
