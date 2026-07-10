@@ -1,12 +1,18 @@
-import { createStore } from 'redux';
+import { combineReducers, createStore } from 'redux';
 
-const initialState = {
+const initialStateAccount = {
   balance: 0,
   loan: 0,
   loanPurpose: '',
 };
 
-function reducer(state = initialState, action) {
+const initialStateCustomer = {
+  fullName: '',
+  nationalID: '',
+  createdAt: '',
+};
+
+function accountReducer(state = initialStateAccount, action) {
   switch (action.type) {
     case 'account/deposit':
       return {
@@ -42,23 +48,87 @@ function reducer(state = initialState, action) {
   }
 }
 
-const store = createStore(reducer);
+function customerReducer(state = initialStateCustomer, action) {
+  switch (action.type) {
+    case 'customer/createCustomer':
+      return {
+        ...state,
+        fullName: action.payload.fullName,
+        nationalID: action.payload.nationalID,
+        createdAt: action.payload.createdAt,
+      };
 
-store.dispatch({ type: 'account/deposit', payload: 500 });
-store.dispatch({ type: 'account/withdraw', payload: 200 });
+    case 'customer/updateName':
+      return {
+        ...state,
+        fullName: action.payload,
+      };
+
+    default:
+      return state;
+  }
+}
+
+const rootReducer = combineReducers({
+  account: accountReducer,
+  customer: customerReducer,
+});
+const store = createStore(rootReducer);
+
+// Action Creators
+function deposit(amount) {
+  return { type: 'account/deposit', payload: amount };
+}
+
+function withdraw(amount) {
+  return { type: 'account/withdraw', payload: amount };
+}
+
+function requestLoan(amount, reason) {
+  return {
+    type: 'account/requestLoan',
+    payload: {
+      amount: amount,
+      purpose: reason,
+    },
+  };
+}
+
+function payLoan() {
+  return {
+    type: 'account/payLoan',
+  };
+}
+
+// deposit or withdraw
+store.dispatch(deposit(500));
+store.dispatch(withdraw(200));
 
 // action of requesting a loan
-store.dispatch({
-  type: 'account/requestLoan',
-  payload: {
-    amount: 1000,
-    purpose: 'Buy a car',
-  },
-});
+store.dispatch(requestLoan(1000, 'Buy a car'));
+store.dispatch(payLoan());
 
-store.dispatch({
-  type: 'account/payLoan',
-});
+
+// initial State Customer
+function createCustomer(fullName, nationalID) {
+  return {
+    type: 'customer/createCustomer',
+    payload: {
+      fullName,
+      nationalID,
+      createdAt: new Date().toISOString(),
+    },
+  };
+}
+
+function updateName(fullName) {
+  return {
+    type: 'customer/updateName',
+    payload: fullName,
+  };
+}
+
+store.dispatch(createCustomer('Nnaukwu Martins', 2008617714))
 
 console.log(
   `File Executed After Running ---> import './store.js'`,
