@@ -15,14 +15,16 @@ function AccountOperations() {
     loan: currentLoan,
     loanPurpose: currentLoanPurpose,
     balance,
-    isLoading
+    isLoading,
   } = useSelector((state) => state.account);
 
   function handleDeposit() {
     if (!depositAmount) return;
 
-    dispatch(deposit(depositAmount, currency));
+    // dispatch(deposit(depositAmount, currency));
+    dispatch(deposit(depositAmount));
     setDepositAmount('');
+    setCurrency('USD');
   }
 
   function handleWithdrawal() {
