@@ -51,6 +51,10 @@ const cartSlice = createSlice({
 
       // Recalculate the item's total price
       item.totalPrice = item.quantity * item.unitPrice;
+
+      // If the quantity reaches 0, remove the item from the cart
+      // using the same state and action received by this reducer.
+      if (item.quantity === 0) cartSlice.caseReducers.removeItem(state, action);
     },
 
     clearCart(state) {
