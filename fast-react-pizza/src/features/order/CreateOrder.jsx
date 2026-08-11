@@ -4,6 +4,11 @@ import { Form, redirect, useActionData, useNavigation } from 'react-router-dom';
 import { createOrder } from '../../services/apiRestaurant';
 import Button from '../../ui/Button';
 import { useSelector } from 'react-redux';
+import { clearCart, getCart, getTotalCartPrice } from '../cart/cartSlice';
+import EmptyCart from '../cart/EmptyCart';
+import store from '../../store';
+import { formatCurrency } from '../../utils/helpers';
+import { useState } from 'react';
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -11,39 +16,44 @@ const isValidPhone = (str) =>
     str,
   );
 
-const fakeCart = [
-  {
-    pizzaId: 12,
-    name: 'Mediterranean',
-    quantity: 2,
-    unitPrice: 16,
-    totalPrice: 32,
-  },
-  {
-    pizzaId: 6,
-    name: 'Vegetale',
-    quantity: 1,
-    unitPrice: 13,
-    totalPrice: 13,
-  },
-  {
-    pizzaId: 11,
-    name: 'Spinach and Mushroom',
-    quantity: 1,
-    unitPrice: 15,
-    totalPrice: 15,
-  },
-];
+// const fakeCart = [
+//   {
+//     pizzaId: 12,
+//     name: 'Mediterranean',
+//     quantity: 2,
+//     unitPrice: 16,
+//     totalPrice: 32,
+//   },
+//   {
+//     pizzaId: 6,
+//     name: 'Vegetale',
+//     quantity: 1,
+//     unitPrice: 13,
+//     totalPrice: 13,
+//   },
+//   {
+//     pizzaId: 11,
+//     name: 'Spinach and Mushroom',
+//     quantity: 1,
+//     unitPrice: 15,
+//     totalPrice: 15,
+//   },
+// ];
 
 function CreateOrder() {
-  // const [withPriority, setWithPriority] = useState(false);
+  const [withPriority, setWithPriority] = useState(false);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
   const username = useSelector((state) => state.user.username);
 
   const formErrors = useActionData();
 
-  const cart = fakeCart;
+  const cart = useSelector(getCart);
+  const totalCartPrice = useSelector(getTotalCartPrice);
+  const priorityCartPrice = withPriority ? totalCartPrice * 0.2 : 0;
+  const totalPrice = totalCartPrice + priorityCartPrice;
+
+  if (!cart.length) return <EmptyCart />;
 
   return (
     <div className="py-6">
@@ -94,8 +104,8 @@ function CreateOrder() {
             type="checkbox"
             name="priority"
             id="priority"
-            // value={withPriority}
-            // onChange={(e) => setWithPriority(e.target.checked)}
+            value={withPriority}
+            onChange={(e) => setWithPriority(e.target.checked)}
           />
           <label htmlFor="priority" className="font-medium">
             Want to yo give your order priority?
@@ -106,7 +116,9 @@ function CreateOrder() {
           <input type="hidden" name="cart" value={JSON.stringify(cart)} />
 
           <Button disabled={isSubmitting} type="primary">
-            {isSubmitting ? 'Placing order...' : 'Order now'}
+            {isSubmitting
+              ? 'Placing order...'
+              : `Order now from ${formatCurrency(totalPrice)}`}
           </Button>
         </div>
       </Form>
@@ -115,27 +127,45 @@ function CreateOrder() {
 }
 
 export async function action({ request }) {
+  // This action runs when the order form is submitted
   console.log('ACTION CALLED');
+
+  // Get the form data submitted by the user
   const formData = await request.formData();
+
+  // Convert the FormData object into a regular JavaScript object
   const data = Object.fromEntries(formData);
 
+  // Create the order object with the data we need
   const order = {
     ...data,
+
+    // Convert the cart from a JSON string back into an array/object
     cart: JSON.parse(data.cart),
-    priority: data.priority === 'on',
+
+    // The checkbox sends "on" when checked, so convert it to true/false
+    priority: data.priority === 'true',
   };
 
+  // Store any validation errors in this object
   const errors = {};
 
+  // Check if the phone number is valid
   if (!isValidPhone(order.phone)) {
     errors.phone =
       'Please give us your correct phone number. We might need to contact you.';
   }
 
+  // If there are validation errors, return them to the form
   if (Object.keys(errors).length > 0) return errors;
 
+  // Send the valid order to the API/server and create the order
   const newOrder = await createOrder(order);
 
+  // Do NOT overuse this hack
+  store.dispatch(clearCart());
+
+  // Redirect the user to the newly created order's page
   return redirect(`/order/${newOrder.id}`);
 }
 
