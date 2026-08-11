@@ -76,8 +76,17 @@ export default cartSlice.reducer;
 /* ------------------------------ 
   Redux selector functions 
 ------------------------------- */
+export const getUsername = (state) => state.user.username;
+
+export const getCart = (state) => state.cart.cart;
+
 export const getTotalCartQuantity = (state) =>
   state.cart.cart.reduce((acc, item) => acc + item.quantity, 0);
 
 export const getTotalCartPrice = (state) =>
   state.cart.cart.reduce((acc, item) => acc + item.totalPrice, 0);
+
+// First fnc receives the ID, second fnc receives the Redux state & returns the qty for that pizza.
+// This allows us to pass an argument to a selector used with useSelector.
+export const getCurrentQuantityById = (id) => (state) =>
+  state.cart.cart.find((itemObj) => itemObj.pizzaId === id)?.quantity ?? 0;
