@@ -3,12 +3,13 @@
 import { Form, redirect, useActionData, useNavigation } from 'react-router-dom';
 import { createOrder } from '../../services/apiRestaurant';
 import Button from '../../ui/Button';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { clearCart, getCart, getTotalCartPrice } from '../cart/cartSlice';
 import EmptyCart from '../cart/EmptyCart';
 import store from '../../store';
 import { formatCurrency } from '../../utils/helpers';
 import { useState } from 'react';
+import { fetchAddress } from '../user/userSlice';
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -41,6 +42,7 @@ const isValidPhone = (str) =>
 // ];
 
 function CreateOrder() {
+  const dispatch = useDispatch()
   const [withPriority, setWithPriority] = useState(false);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
@@ -55,9 +57,12 @@ function CreateOrder() {
 
   if (!cart.length) return <EmptyCart />;
 
+
   return (
     <div className="py-6">
       <h2 className="mb-8 text-xl font-semibold">Ready to order? Lets go!</h2>
+
+      <button onClick={() => dispatch(fetchAddress())}>Get positon</button>
 
       <Form method="POST">
         <div className="mb-5 flex gap-2 sm:flex-row sm:items-center">
@@ -140,10 +145,10 @@ export async function action({ request }) {
   const order = {
     ...data,
 
-    // Convert the cart from a JSON string back into an array/object
+    // Convert the cart from a JSON string back into a JavaScript array
     cart: JSON.parse(data.cart),
 
-    // The checkbox sends "on" when checked, so convert it to true/false
+    // Convert the priority value from a string to a boolean
     priority: data.priority === 'true',
   };
 
@@ -170,3 +175,21 @@ export async function action({ request }) {
 }
 
 export default CreateOrder;
+
+
+/*
+  FormData values are received as strings.
+  Object.fromEntries() converts FormData into a regular JavaScript object,
+  making it easier to access values like data.name and data.phone.
+
+  Example:
+  data = {
+    name: 'Martins',
+    phone: '08012345678',
+    cart: '[{"pizzaId":12, "quantity":2}]',
+    priority: 'true',
+  }
+
+  Note: values like cart are still strings, so JSON.parse() is used
+  when we need to convert them back into their original data type.
+*/
