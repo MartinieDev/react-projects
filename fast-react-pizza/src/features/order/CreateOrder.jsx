@@ -32,8 +32,6 @@ function CreateOrder() {
 
   const isLoadingAddress = addressStatus === 'loading';
 
-  console.log(isLoadingAddress, position, address, errorAddress);
-
   const formErrors = useActionData();
 
   const cart = useSelector(getCart);
