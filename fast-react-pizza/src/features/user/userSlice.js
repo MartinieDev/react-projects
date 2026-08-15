@@ -77,3 +77,4 @@ function getPosition() {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
+

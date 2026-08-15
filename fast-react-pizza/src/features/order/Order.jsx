@@ -9,6 +9,7 @@ import {
 } from '../../utils/helpers';
 import OrderItem from './OrderItem';
 import { useEffect } from 'react';
+import UpdateOrder from './updateOrder';
 
 function Order() {
   // Everyone can search for all orders, so for privacy reasons we're gonna gonna exclude names or address, these are only for the restaurant staff
@@ -72,7 +73,8 @@ function Order() {
             item={item}
             isLoadingIngredients={fetcher?.state === 'loading'}
             ingredients={
-              fetcher?.data?.find((itemObj) => itemObj.id === item.pizzaId)?.ingredients ?? []
+              fetcher?.data?.find((itemObj) => itemObj.id === item.pizzaId)
+                ?.ingredients ?? []
             }
           />
         ))}
@@ -91,6 +93,8 @@ function Order() {
           To pay on delivery: {formatCurrency(orderPrice + priorityPrice)}
         </p>
       </div>
+
+      {!priority && <UpdateOrder order={order} />}
     </div>
   );
 }
